@@ -1,0 +1,7 @@
+<2021-08-25 Wed>
+* In developement stage of code
++ initially named analyze_data.py
++ renamed classify_volume_horizon.py
++ *.dat files are horizon (xyz) from ODT
++ Some .dat files are concatenated version of others w/ units associated
++ Use some horizons to classify voxels and test *bool_test.dat
