@@ -111,9 +111,6 @@ ax1.scatter(x, y, s = 2.5, c = za, cmap = 'terrain', vmin = z_range[0], vmax = z
 ax2.scatter(x, y, s = 2.5, c = zb, cmap = 'terrain', vmin = z_range[0], vmax = z_range[1])
 
 #%% 
-# =============================================================================
-# DEV
-# =============================================================================
 
 data_arr_shape = data_arr = V['tfl']['values'].shape
 data_xy = np.vstack((Vx,Vy)).T
