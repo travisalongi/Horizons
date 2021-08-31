@@ -74,7 +74,7 @@ survey_sample_rate = 4 # ms
 algorithm = 'ball_tree'
 
 
-for k in list(dfs.keys())[1:]:
+for k in list(dfs.keys())[:-1]:
     unit_name = k.split('_')[0]
     t0 = datetime.datetime.now()
     
@@ -82,7 +82,7 @@ for k in list(dfs.keys())[1:]:
     h = dfs[k]    
     x,y,z = interpolate_3d([h['x'], h['y']], h['z'], n_points = 150) # npts = 150 gives grid spacing of ~150m
     
-    # Plot
+    # Plot & save
     plt.figure(figsize = [10,10])
     plt.scatter(x, y, s = 2.5, c = z, cmap = 'viridis', label = 'Interpolated')
     plt.legend()
@@ -96,8 +96,6 @@ for k in list(dfs.keys())[1:]:
     
     print("{} is gridded, plotted and saved in {}".format(unit_name, datetime.datetime.now() - t0))
 
-
-#%% 
 
     horizon_points = M
     
@@ -115,9 +113,7 @@ for k in list(dfs.keys())[1:]:
     # Make model
     model = NearestNeighbors(n_neighbors = 1, algorithm = algorithm).fit(horizon_points)   
 
-#%%
-    # Calculate distances knn method
-    # For each xy point
+    # Calculate distances knn method for each xy point
     t1 = datetime.datetime.now()
     for i, xy in enumerate(data_xy[:]):
     
@@ -142,36 +138,16 @@ for k in list(dfs.keys())[1:]:
         
         dist_arr[i,:] = d_min_dist
         dir_arr[i,:] = above # x coords are east/west ... x dist from fault
+    
     # Convert direction array to boolean and save
     dir_arr = dir_arr.astype(bool)
     np.savetxt('/home/talongi/Gypsy/Project/Horizons/Above_horizon/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
     np.savetxt('/home/talongi/Gypsy/Project/Horizons/Dist_from_horizon/{}.dat'.format(unit_name),
-               np.hstack((data_xy, dist_arr)), fmt = '%.2f', delimiter = ' ')
-    print("{} distances calculated from horizon and above/below determined took".format(unit_name, datetime.datetime.now() - t1)
+               np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
+    print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.datetime.now() - t1))
 
 
 #%%
-# Save the dir_arr to respective horizon and proceed
-# Below repetto & above the basement
-m_rep2base = np.logical_and(~dir_mohnian, dir_basement)
-plt.imshow(m_rep2base[:1000,:])
-
-
-#%%
-
 new = np.hstack((data_xy, m_rep2base))
 np.savetxt('mohn2base_hor_bool_test.dat', new, fmt = '%i', delimiter = ' ')
-
-#%%
-
-plt.figure(figsize = [10,10])
-
-# plt.plot(Vx, Vy, 'b*', alpha = 1)
-plt.plot(data_xy[10000:11000,0], data_xy[10000:11000,1], 'r-')
-plt.plot(horizon_points_min_dist[:,0], horizon_points_min_dist[:,1], 'go')
-plt.plot(xy[0], xy[1], "k*")
-plt.scatter(x, y, s = 1.5, c = z, cmap = 'YlOrRd')
-plt.colorbar()
-
-
