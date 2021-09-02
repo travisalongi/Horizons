@@ -16,26 +16,27 @@ Horizons were gridded/interpolated in shell_classify_volume_horizon.py
     
 @author: talongi
 """
-#%% Import
-
 import glob, h5py
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import TFL_definitions as tfl
 from datetime import datetime
-from scipy.interpolate import griddata
 from sklearn.neighbors import NearestNeighbors
 
 
-# Read the Data
+# ==== Read the Data === 
 # Import - CHEVRON Volume
 h5_file = '/home/talongi/Gypsy/Project/TFL_chev/all_data_2021.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
+survey_sample_rate = 4 # ms
 
-# Lets actually work in time -- this is the same as Shell
+# Format the data
+data_arr_shape = V['tfl']['values'].shape
+data_xy = np.vstack((Vx,Vy)).T
+del Vxy, Vx, Vy, Vz_x
+
+# Lets actually work in time -- these are different limits than Shell
 Vzt = np.arange(24, 3972, 4); len(Vzt) # Timelimits output for TFL by ODT
 
 # Horizons to work with
@@ -44,21 +45,15 @@ hor_files = glob.glob(hor_dir + '*')
 
 
 #%% Loop through horizons
-
-# Load some more information
-data_arr_shape = V['tfl']['values'].shape
-data_xy = np.vstack((Vx,Vy)).T
-survey_sample_rate = 4 # ms
 algorithm = 'ball_tree'
-
 for file in hor_files:
     unit_name = file.split('/')[-1][:-4]
     t0 = datetime.now()
     
-    # Load gridded horizon
+    # Load previously gridded horizon
     horizon_points = pd.read_csv(file, sep = '\s+').values
     
-    # Use time for Z
+    # Use time for Z gives best results
     z_arr = Vzt
     
     # Remove np.nan for distance calc.
@@ -92,16 +87,16 @@ for file in hor_files:
         
         # Determine vector from horizon to data point
         difference = horizon_points_min_dist - xyz_tile
-        plt.plot(difference[:,0], difference[:,1], 'o')
         
         # Positive z-values are above horizon
         above = difference[:,2] > 0
         
-        dist_arr[i,:] = d_min_dist
+        # Add data to array
+        dist_arr[i,:] = d_min_dist.astype(int)
         dir_arr[i,:] = above 
+
     
-    # Convert direction array to boolean and save
-    # dir_arr = dir_arr.astype(bool)
+    # Save
     np.savetxt('/home/talongi/Gypsy/Project/Horizons/Chev_above_horizon/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
     np.savetxt('/home/talongi/Gypsy/Project/Horizons/Chev_dist_from_horizon/{}.dat'.format(unit_name),
@@ -109,6 +104,6 @@ for file in hor_files:
     print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 
 
-#%%
+#%% This is how to save data in format to read into ODT
 # new = np.hstack((data_xy, m_rep2base))
 # np.savetxt('mohn2base_hor_bool_test.dat', new, fmt = '%i', delimiter = ' ')

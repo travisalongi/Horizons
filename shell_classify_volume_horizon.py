@@ -1,29 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 28 15:34:10 2021
+Created Wed Jul 28 2021
+
+Purpose:
+    + Reads horizon data exported from ODT, grids the data (down samples)
+        - Save the result for Chevron analysis
+    + Classify region of seismic volume as above or below horizon
+
+Save volumes:
+    1. As boolean, where True = above the horizon
+    2. As a distance volume, where each point contains
+    minimum distance to the horizon
 
 @author: talongi
 """
-#%% Import
-
-import h5py, datetime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import TFL_definitions as tfl
+from datetime import datetime
 from scipy.interpolate import griddata
 from sklearn.neighbors import NearestNeighbors
 
 
-# Read the Data
+# === Read the Data ===
 # Import - SHELL Volume
 h5_file = '/home/talongi/Gypsy/Project/TFL_shell/all_data_2021.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
 
-# Lets actually work in time
+# Working in time gives better results
 Vzt = np.arange(56, 3941, 4) # Timelimits output for TFL by ODT
 
 # Import - Horizons
@@ -33,7 +41,7 @@ horizon_names = df.horizons.unique()
 # Load unique horizons into dictionary
 dfs = dict(tuple(df.groupby('horizons')))
 print('Horizons Loaded...'); [print(k) for k in dfs.keys()]
-del df
+del df # attempt to keep memory use low
 
 
 def interpolate_3d(data_to_grid, data_to_interpolate, n_points = 50):
@@ -53,30 +61,17 @@ def interpolate_3d(data_to_grid, data_to_interpolate, n_points = 50):
     
     return X1, X2, X3
 
-def grid(data_to_grid, n_points):
-    """
-    Similar to def interpolate_3d data but just returns grid
-    """
-    x1 = data_to_grid[0]
-    x2 = data_to_grid[1]
-    
-    x1i = np.linspace(min(x1), max(x1), n_points)
-    x2i = np.linspace(min(x2), max(x2), n_points)
-    
-    X1, X2 = np.meshgrid(x1i, x2i)
-    return X1, X2
 
 #%% Loop through horizons
 
 data_arr_shape = data_arr = V['tfl']['values'].shape
-data_xy = np.vstack((Vx,Vy)).T
+data_xy = np.vstack((Vx,Vy)).T; del Vx, Vy # Now unnecessary
 survey_sample_rate = 4 # ms
 algorithm = 'ball_tree'
 
-
 for k in list(dfs.keys())[:-1]:
     unit_name = k.split('_')[0]
-    t0 = datetime.datetime.now()
+    t0 = datetime.now()
     
     # Grid horizon & make plots
     h = dfs[k]    
@@ -91,14 +86,10 @@ for k in list(dfs.keys())[:-1]:
     plt.savefig('/home/talongi/Gypsy/Project/Figures/Horizon_grids/' + unit_name + '.png')    
     
     # Save text files
-    M = np.vstack((x.flatten(), y.flatten(), z.flatten())).T
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Gridded_horizons/' + unit_name + '.xyz', M, fmt = '%.2f', delimiter = ' ')
-    
-    print("{} is gridded, plotted and saved in {}".format(unit_name, datetime.datetime.now() - t0))
+    horizon_points = np.vstack((x.flatten(), y.flatten(), z.flatten())).T
+    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Gridded_horizons/' + unit_name + '.xyz', horizon_points, fmt = '%.2f', delimiter = ' ')
+    print("{} is gridded, plotted and saved in {}".format(unit_name, datetime.now() - t0))
 
-
-    horizon_points = M
-    
     # Arrays to fill & store
     dist_arr = np.full(data_arr_shape, np.nan) 
     dir_arr = np.full(data_arr_shape, np.nan)
@@ -114,7 +105,7 @@ for k in list(dfs.keys())[:-1]:
     model = NearestNeighbors(n_neighbors = 1, algorithm = algorithm).fit(horizon_points)   
 
     # Calculate distances knn method for each xy point
-    t1 = datetime.datetime.now()
+    t1 = datetime.now()
     for i, xy in enumerate(data_xy[:]):
     
         # Data formatting 
@@ -136,7 +127,7 @@ for k in list(dfs.keys())[:-1]:
         # Positive z-values are above horizon
         above = difference[:,2] > 0
         
-        dist_arr[i,:] = d_min_dist
+        dist_arr[i,:] = d_min_dist.astype(int)
         dir_arr[i,:] = above # x coords are east/west ... x dist from fault
     
     # Convert direction array to boolean and save
@@ -145,9 +136,9 @@ for k in list(dfs.keys())[:-1]:
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
     np.savetxt('/home/talongi/Gypsy/Project/Horizons/Dist_from_horizon/{}.dat'.format(unit_name),
                np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
-    print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.datetime.now() - t1))
+    print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 
 
 #%%
-new = np.hstack((data_xy, m_rep2base))
-np.savetxt('mohn2base_hor_bool_test.dat', new, fmt = '%i', delimiter = ' ')
+# new = np.hstack((data_xy, m_rep2base))
+# np.savetxt('mohn2base_hor_bool_test.dat', new, fmt = '%i', delimiter = ' ')

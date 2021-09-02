@@ -1,12 +1,13 @@
-<2021-08-25 Wed>
 * In developement stage of code
+<2021-08-25 Wed>
 + initially named analyze_data.py
 + renamed classify_volume_horizon.py
 + *.dat files are horizon (xyz) from ODT
 + Some .dat files are concatenated version of others w/ units associated
 + Use some horizons to classify voxels and test *bool_test.dat
-<2021-08-30 Mon>
+
 * Export all_inversion+ horizons that were constrained with well log tops (7 different contacts)
+<2021-08-30 Mon>
 + Perform the calculation with updated classify_volume_horizon.py code
 ** Shell data
 + Takes ~1 min to grid the horizons (down sampled from 10X2 m bin spacing to ~150 m)
@@ -14,3 +15,10 @@
 + Takes ~10 min / horizon to do calculation and to store all the data
 + Keep a copy of all orientations in /Above_horizon
 + Keep a copy of distances in /Dist_from_horizon
+
+* Write code for do same thing with Chevron data
+<2021-09-02 Thu>
++ Loading previously gridded horzions & not recalculating
++ Assuming that the calculation will take ~8x as long since there are about 8 more data points
++ Renamed /Above_horizon and /Dist_from_horizon to account for which volume they pretain to.
++ Each horizon takes ~ 42 minutes
