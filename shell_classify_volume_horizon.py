@@ -7,7 +7,7 @@ Created on Wed Jul 28 15:34:10 2021
 """
 #%% Import
 
-import os, h5py, datetime
+import h5py, datetime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # Read the Data
 # Import - SHELL Volume
-h5_file = '../TFL_shell/all_data_2021.h5'
+h5_file = '/home/talongi/Gypsy/Project/TFL_shell/all_data_2021.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
