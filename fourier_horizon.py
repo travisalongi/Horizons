@@ -1,7 +1,7 @@
 """
 
 Do fourier analysis on horizons 
-Want to see dominant wavelength
+Want to see dominant wavelength and see if correspond to width of damage zone
 I think there are still problems in this code
 
 author: talongi
@@ -24,21 +24,24 @@ dfs = dict(tuple(df.groupby('horizons')))
 print('Horizons Loaded...'); [print(k) for k in dfs.keys()]
 del df # attempt to keep memory use low
 
-# Make figures of demeaned and detrended x-dir lines
+# Loop through horizons
 for df in dfs:
     # Select data for horizon
     hor = dfs[df]
     x,y,z = hor['x'].values, hor['y'].values, hor['z'].values
 
-    # Find where jumps in x are
+    # Find where jumps in x are these are x-lines
     w = np.where(np.diff(x) < 10)[0]
+    # Create colors for plot
     colors = plt.cm.viridis(np.linspace(0, 1, len(w)))
 
-    # Make plots
+    # Start plots & lists to fill
     f,ax = plt.subplots(figsize = [10,10])
     ff,axf = plt.subplots(figsize = [10,10])
     z_list = []
     psd_list = []
+
+    # Loop through the x-lines
     for i, (low, high) in enumerate(zip(w[:-1], w[1:])):
         # Mask
         m = np.arange(low + 1,high) + 1
@@ -72,6 +75,7 @@ for df in dfs:
     ff.savefig('Fourier_figs/freq_{}.png'.format(str(df)))
 
 
+    # This is not working correctly
     # Stack data and plot
     zd = np.empty((len(z_list), max([len(list) for list in z_list])))
     zd.fill(np.nan)
