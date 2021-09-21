@@ -13,7 +13,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from obspy import Trace
+from obspy.signal.filter import bandpass
 from scipy.signal import detrend
+
 
 # Import - Horizons
 df = pd.read_csv('all_inversion+.dat', sep = '\s+',
@@ -36,6 +38,7 @@ for df in dfs:
     colors = plt.cm.viridis(np.linspace(0, 1, len(w)))
 
     # Start plots & lists to fill
+    plt.close('all')
     f,ax = plt.subplots(figsize = [10,10])
     ff,axf = plt.subplots(figsize = [10,10])
     z_list = []
@@ -46,17 +49,19 @@ for df in dfs:
         # Mask
         m = np.arange(low + 1,high) + 1
 
-        # Set up arrays for fourier
-        N = len(m)
-        dx = np.median(np.diff(x[m]))
-        freq = (np.arange(N)/ N/ dx) + 1e-5
-        T = 1/freq
-        nyquist = int(N/2)
-
         # Select longer profiles & and east of the noise
-        if (x[m].max() - x[m].min() > 3000) and (x[m].min() > 389800):
-            # Preprocess twt data   
+        if (x[m].max() - x[m].min() > 8000) and (x[m].min() > 389800):
+            # Preprocess twt data & use obspy Trace  
             z_proc = Trace(z[m]).detrend().taper(0.1)
+
+            # Set up arrays for fourier
+            N = len(z_proc)
+            dx = np.median(np.diff(x[m]))
+            freq = (np.arange(N)/ N/ dx) + 1e-5
+            T = 1/freq
+            nyquist = int(N/2)
+
+
             Z = np.abs(np.fft.fft(z_proc))
             PSD = Z ** 2 * dx / N / dx
             z_list.append(Z)
@@ -69,8 +74,9 @@ for df in dfs:
             ax.set_title(df.split('_')[:-1][0].capitalize())
 
             # Make plot of frequency data
-            axf.plot(T[1:nyquist], Z[1:nyquist], 
-                    'o-', color = colors[i], alpha = 0.15)
+            axf.plot(1/freq[1:nyquist], Z[1:nyquist], 
+                    '-', color = colors[i], alpha = 0.15)
+    axf.set_title(df.split('_')[:-1][0].capitalize())
     f.savefig('Fourier_figs/obspy_{}.png'.format(str(df)))
     ff.savefig('Fourier_figs/freq_{}.png'.format(str(df)))
 
@@ -83,9 +89,9 @@ for df in dfs:
         inds = np.arange(len(list))
         zd[k,inds] = list
 
-    avg = np.median(zd, axis = 0)
+    avg = np.nanmean(zd, axis = 0)
     ffs, axfs = plt.subplots(figsize = [10,10])
-    axfs.plot(T[1:nyquist], avg[1:nyquist], '-ok')
+    axfs.plot(avg, '-ok')
     axfs.set_title(df.split('_')[:-1][0].capitalize())
     ffs.savefig('Fourier_figs/stack_{}.png'.format(str(df)))
     
