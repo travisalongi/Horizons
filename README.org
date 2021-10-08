@@ -22,3 +22,10 @@
 + Assuming that the calculation will take ~8x as long since there are about 8 more data points
 + Renamed /Above_horizon and /Dist_from_horizon to account for which volume they pretain to.
 + Each horizon takes ~ 42 minutes
+
+* Update w/ remapped horizons all_inversion+2.data
+<2021-10-08 Fri>
++ Have run shell_classify_volume_horizon.py
++ Running on chevron_classify_volume_horizon.py
+  - This takes about 30 mins / horizon
++ Moved previous gridded horizons to gridded_horizons_old

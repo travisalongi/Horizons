@@ -7,7 +7,7 @@ author: talongi
 date: sept. 2021
 """
 
-# Load data
+# === Load data ===
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ plt.plot(x, y_spl.derivative(n=2)(x), 'r')
 #%%
 
 
-# Import - Horizons
+# === Import - Horizons ===
 df = pd.read_csv('all_inversion+.dat', sep = '\s+',
                  names = ['horizons','x','y','z'])
 horizon_names = df.horizons.unique()
@@ -39,7 +39,7 @@ dfs = dict(tuple(df.groupby('horizons')))
 print('Horizons Loaded...'); [print(k) for k in dfs.keys()]
 del df # attempt to keep memory use low
 
-# Loop through horizons
+# === Loop through horizons ===
 for df in dfs:
     # Select data for horizon from data frame
     hor = dfs[df]

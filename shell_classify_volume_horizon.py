@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created Wed Jul 28 2021
+Created Wed Jul 2021
+Modified Oct 2021 - to use all_inversion+2.dat
 
 Purpose:
     + Reads horizon data exported from ODT, grids the data (down samples)
@@ -15,6 +16,7 @@ Save volumes:
 
 @author: talongi
 """
+import h5py
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +28,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # === Read the Data ===
 # Import - SHELL Volume
-h5_file = '/home/talongi/Gypsy/Project/TFL_shell/all_data_2021.h5'
+h5_file = '../TFL_shell/all_data_2021.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
@@ -35,7 +37,7 @@ Vx, Vy = Vxy[:,0], Vxy[:,1]
 Vzt = np.arange(56, 3941, 4) # Timelimits output for TFL by ODT
 
 # Import - Horizons
-df = pd.read_csv('all_inversion+.dat', sep = '\s+',
+df = pd.read_csv('all_inversion+2.dat', sep = '\s+',
                  names = ['horizons','x','y','z'])
 horizon_names = df.horizons.unique()
 # Load unique horizons into dictionary
@@ -69,7 +71,7 @@ data_xy = np.vstack((Vx,Vy)).T; del Vx, Vy # Now unnecessary
 survey_sample_rate = 4 # ms
 algorithm = 'ball_tree'
 
-for k in list(dfs.keys())[:-1]:
+for k in list(dfs.keys())[-1:]:
     unit_name = k.split('_')[0]
     t0 = datetime.now()
     
@@ -83,11 +85,11 @@ for k in list(dfs.keys())[:-1]:
     plt.legend()
     plt.title(unit_name)
     plt.colorbar(label = 'twt [ms]')
-    plt.savefig('/home/talongi/Gypsy/Project/Figures/Horizon_grids/' + unit_name + '.png')    
+    plt.savefig('../Figures/Horizon_grids/' + unit_name + '.png')    
     
     # Save text files
     horizon_points = np.vstack((x.flatten(), y.flatten(), z.flatten())).T
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Gridded_horizons/' + unit_name + '.xyz', horizon_points, fmt = '%.2f', delimiter = ' ')
+    np.savetxt('Gridded_horizons/' + unit_name + '.xyz', horizon_points, fmt = '%.2f', delimiter = ' ')
     print("{} is gridded, plotted and saved in {}".format(unit_name, datetime.now() - t0))
 
     # Arrays to fill & store
@@ -132,9 +134,9 @@ for k in list(dfs.keys())[:-1]:
     
     # Convert direction array to boolean and save
     dir_arr = dir_arr.astype(bool)
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Above_horizon/{}.dat'.format(unit_name), 
+    np.savetxt('Shell_above_horizon/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Dist_from_horizon/{}.dat'.format(unit_name),
+    np.savetxt('Shell_dist_from_horizon/{}.dat'.format(unit_name),
                np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
     print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 

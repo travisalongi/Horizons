@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on 2021-09-02
-
+Modified Oct. 2021 - to read all_inversion+2.dat
 
 Classify portions of the Volume between horizons
 
@@ -25,7 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # ==== Read the Data === 
 # Import - CHEVRON Volume
-h5_file = '/home/talongi/Gypsy/Project/TFL_chev/all_data_2021.h5'
+h5_file = '../TFL_chev/all_data_2021.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
@@ -40,9 +40,9 @@ del Vxy, Vx, Vy, Vz_x
 Vzt = np.arange(24, 3972, 4); len(Vzt) # Timelimits output for TFL by ODT
 
 # Horizons to work with
-hor_dir = '/home/talongi/Gypsy/Project/Horizons/Gridded_horizons/'
-hor_files = glob.glob(hor_dir + '*')
-
+hor_dir = 'Gridded_horizons/'
+hor_files = sorted(glob.glob(hor_dir + '*'))
+[print(f) for f in hor_files]
 
 #%% Loop through horizons
 algorithm = 'ball_tree'
@@ -97,9 +97,9 @@ for file in hor_files:
 
     
     # Save
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Chev_above_horizon/{}.dat'.format(unit_name), 
+    np.savetxt('Chev_above_horizon/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
-    np.savetxt('/home/talongi/Gypsy/Project/Horizons/Chev_dist_from_horizon/{}.dat'.format(unit_name),
+    np.savetxt('Chev_dist_from_horizon/{}.dat'.format(unit_name),
                np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
     print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 
