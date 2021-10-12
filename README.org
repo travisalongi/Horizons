@@ -29,3 +29,7 @@
 + Running on chevron_classify_volume_horizon.py
   - This takes about 30 mins / horizon
 + Moved previous gridded horizons to gridded_horizons_old
+
+* Classify volume on horizon complete for all_inversion+2.dat\
+<2021-10-11 Mon>
++ All old files from all_inversion+ are moved to directories *old here
