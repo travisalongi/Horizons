@@ -35,15 +35,16 @@ horizon_names = df.horizons.unique()
 
 # Load unique horizons into dictionary
 dfs = dict(tuple(df.groupby('horizons')))
-print('Horizons Loaded...'); [print(k) for k in dfs.keys()]
+print('Horizons Loaded...')
 del df # attempt to keep memory use low
 
 #%%
 # === Loop through horizons ===
-xlims = [389000, 403100]
+xlims = [389000 - 1000, 403100 + 1000]
 for df in dfs:
     # Select data for horizon from data frame
     hor = dfs[df]
+    print(df)
     x,y,z = hor['x'].values, hor['y'].values, hor['z'].values
 
     # Find where jumps in x are these are x-lines
@@ -54,26 +55,23 @@ for df in dfs:
 
     plt.close('all')
     f,(ax,ax2,ax3,ax4) = plt.subplots(nrows = 4, figsize = [10,15])
-    f2,(axm) = plt.subplots(nrows = 1, figsize = [10,10])
+    
+    # FOR MAP
+    x_map, y_map, z_dd2_map = [],[],[]
+    f2,axm = plt.subplots(nrows = 1, figsize = [10,10])
+    
     # Loop through the x-lines
-    ms = []
     for i, (low, high) in enumerate(zip(w[:-1], w[1:])):
         # Mask
-        m = np.arange(low + 1,high) + 1;ms.append(len(m))
-        # print(len(m))
-        if (np.floor(np.unique(np.diff(x[m]))) != 13).any():
-            print(i)
+        m = np.arange(low + 1,high) + 1
 
         # Select longer profiles & and north of the noise
         if (x[m].max() - x[m].min() > 2000) and  (y[m].min() >3709700):
             
-            # Map view plot
-            axm.plot(x[m], y[m], color = colors[i], alpha = 0.5)
-            
             # Preprocess twt data & use obspy Trace  
             # z_proc = Trace(z[m]).detrend().taper(0.15)
             z_proc = Trace(z[m])
-            n_smooth = 10
+            n_smooth = 30
             dx = np.median(np.diff(x))
             sm = smooth(z_proc, n_smooth)
 
@@ -98,6 +96,8 @@ for df in dfs:
             ax3.set_xlim(xlims)
             ax4.set_xlim(xlims)
 
+            ax4.set_ylim([-0.01, 0.01])
+
             ax.xaxis.set_ticklabels([])
             ax2.xaxis.set_ticklabels([])
             ax3.xaxis.set_ticklabels([])
@@ -112,10 +112,22 @@ for df in dfs:
             ax.set_title('{} Raw'.format(df.split('_')[:-1][0].capitalize()),
                     fontsize = 28)
             ax2.set_title('Smoothed over N samples {} or {} m'.format(n_smooth,
-                dx * n_smooth,
+                np.floor(dx * n_smooth),
                 fontsize = 28))
             ax3.set_title('Derivative of Smoothed Data')
             ax4.set_title('Derivative of Smoothed Data')
+
+            # Map
+            x_map.append(x[m]); y_map.append(y[m]); z_dd2_map.append(z_dd2)
+        
+    # Make tuples into arrays 
+    x_map = np.concatenate(x_map)
+    y_map = np.concatenate(y_map)
+    z_dd2_map = np.concatenate(z_dd2_map)
+
+    
+    axm.scatter(x_map,y_map, 0.5 , z_dd2_map, vmin = -z_dd2_map.std()*2, vmax = z_dd2_map.std()*2)
+    axm.axis('equal')    
 
     f.savefig('Curvature_figs/{}.png'.format(str(df)))
     f2.savefig('Curvature_figs/map_{}.png'.format(str(df)))
