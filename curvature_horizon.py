@@ -1,5 +1,6 @@
 """
 Want to see dominant wavelength and see if correspond to width of damage zone
+Issue: Data is too noisy
 
 author: talongi
 date: sept. 2021

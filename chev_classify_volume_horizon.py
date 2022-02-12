@@ -4,6 +4,7 @@
 Created on 2021-09-02
 Modified Oct. 2021 - to read all_inversion+2.dat
 
+NOTE: run shell_classify_volume_horizon.py first which separates the raw file
 Classify portions of the Volume between horizons
 
 Save volumes:

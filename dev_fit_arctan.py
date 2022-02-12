@@ -6,9 +6,7 @@ This is a stepping stop to fit_arctan_horizons.py - a code that doesn't work as 
 Author: Travis Alongi
 """
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.interpolate import UnivariateSpline
 
 def inversion(d,G):
     """does least squares inversion | returns model"""

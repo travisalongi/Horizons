@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created Wed Jul 2021
+Created Jul 2021
 Modified Oct 2021 - to use all_inversion+2.dat
 
 Purpose:
@@ -37,7 +37,7 @@ Vx, Vy = Vxy[:,0], Vxy[:,1]
 Vzt = np.arange(56, 3941, 4) # Timelimits output for TFL by ODT
 
 # Import - Horizons
-df = pd.read_csv('all_inversion+2.dat', sep = '\s+',
+df = pd.read_csv('Raw_data/all_inversion+2.dat', sep = '\s+',
                  names = ['horizons','x','y','z'])
 horizon_names = df.horizons.unique()
 # Load unique horizons into dictionary
