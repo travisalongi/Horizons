@@ -33,3 +33,10 @@
 * Classify volume on horizon complete for all_inversion+2.dat\
 <2021-10-11 Mon>
 + All old files from all_inversion+ are moved to directories *old here
+
+* Update w/ remapped manual picked horizons /Raw_data/all_?_4*.dat
+<2022-02-14 Mon>
++ Keep in mind that analysis is different for east and west of the fault
++ East contains Pico lower through Basement & West contains Mohnian-delmontian through Basement
++ ODT exports of bulk horizon data are now contained in Raw_data
++

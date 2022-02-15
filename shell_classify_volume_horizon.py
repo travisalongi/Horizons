@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created Jul 2021
-Modified Oct 2021 - to use all_inversion+2.dat
+Modified Oct 2021 - to use Raw_data/all_inversion+2.dat
+Modified Feb 2022 - to use Raw_data/all_?_4*.dat
 
 Purpose:
     + Reads horizon data exported from ODT, grids the data (down samples)
@@ -16,33 +17,33 @@ Save volumes:
 
 @author: talongi
 """
+from datetime import datetime
 import h5py
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import TFL_definitions as tfl
-from datetime import datetime
 from scipy.interpolate import griddata
 from sklearn.neighbors import NearestNeighbors
 
 
 # === Read the Data ===
 # Import - SHELL Volume
-h5_file = '../TFL_shell/all_data_2021.h5'
+h5_file = '../TFL_shell/all_data_2022.h5'
 V = h5py.File(h5_file, 'r')
-Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
+Vxy, Vz_x = V['xy'][:], V['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
 
 # Working in time gives better results
 Vzt = np.arange(56, 3941, 4) # Timelimits output for TFL by ODT
 
 # Import - Horizons
-df = pd.read_csv('Raw_data/all_inversion+2.dat', sep = '\s+',
+df = pd.read_csv('Raw_data/all_w_4_picked_horizons.dat', sep = '\s+',
                  names = ['horizons','x','y','z'])
 horizon_names = df.horizons.unique()
 # Load unique horizons into dictionary
 dfs = dict(tuple(df.groupby('horizons')))
-print('Horizons Loaded...'); [print(k) for k in dfs.keys()]
+print('Horizons Loaded...')
+[print(k) for k in dfs.keys()]
 del df # attempt to keep memory use low
 
 
@@ -65,14 +66,14 @@ def interpolate_3d(data_to_grid, data_to_interpolate, n_points = 50):
 
 
 #%% Loop through horizons
-
-data_arr_shape = data_arr = V['tfl']['values'].shape
-data_xy = np.vstack((Vx,Vy)).T; del Vx, Vy # Now unnecessary
+data_arr_shape = data_arr = V['values'].shape
+data_xy = np.vstack((Vx,Vy)).T
+del Vx, Vy # Keep memory low
 survey_sample_rate = 4 # ms
 algorithm = 'ball_tree'
 
-for k in list(dfs.keys())[-1:]:
-    unit_name = k.split('_')[0]
+for k in list(dfs.keys())[:]:
+    unit_name = k.split('_')[1] + '_' + k.split('_')[2]
     t0 = datetime.now()
     
     # Grid horizon & make plots
@@ -85,11 +86,11 @@ for k in list(dfs.keys())[-1:]:
     plt.legend()
     plt.title(unit_name)
     plt.colorbar(label = 'twt [ms]')
-    plt.savefig('../Figures/Horizon_grids/' + unit_name + '.png')    
+    plt.savefig('../Figures/Horizon_grids/West_4/' + unit_name + '.png')    
     
     # Save text files
     horizon_points = np.vstack((x.flatten(), y.flatten(), z.flatten())).T
-    np.savetxt('Gridded_horizons/' + unit_name + '.xyz', horizon_points, fmt = '%.2f', delimiter = ' ')
+    np.savetxt('Gridded_horizons_4/West/' + unit_name + '.xyz', horizon_points, fmt = '%.2f', delimiter = ' ')
     print("{} is gridded, plotted and saved in {}".format(unit_name, datetime.now() - t0))
 
     # Arrays to fill & store
@@ -114,7 +115,7 @@ for k in list(dfs.keys())[-1:]:
         # Duplicate the xy point as many times as their are depth points
         tile = np.tile(xy, (n_z,1))
     
-        # Combine the xy points with the depth array
+        # Combine the xy points with the depth array, Z is in milliseconds
         xyz_tile = np.concatenate((tile, z_arr.reshape(len(z_arr), 1)), axis = 1)
         
         # Calculate distances
@@ -124,19 +125,18 @@ for k in list(dfs.keys())[-1:]:
         
         # Determine vector from horizon to data point
         difference = horizon_points_min_dist - xyz_tile
-        # plt.plot(difference[:,0], difference[:,1], 'o')
         
         # Positive z-values are above horizon
         above = difference[:,2] > 0
         
         dist_arr[i,:] = d_min_dist.astype(int)
-        dir_arr[i,:] = above # x coords are east/west ... x dist from fault
+        dir_arr[i,:] = above 
     
     # Convert direction array to boolean and save
     dir_arr = dir_arr.astype(bool)
-    np.savetxt('Shell_above_horizon/{}.dat'.format(unit_name), 
+    np.savetxt('Shell_above_horizon_w_4/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
-    np.savetxt('Shell_dist_from_horizon/{}.dat'.format(unit_name),
+    np.savetxt('Shell_dist_from_horizon_e_4/{}.dat'.format(unit_name),
                np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
     print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 

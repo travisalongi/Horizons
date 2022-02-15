@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 """
 Created on 2021-09-02
-Modified Oct. 2021 - to read all_inversion+2.dat
+Modified Oct. 2021 - to read Raw_data/all_inversion+2.dat
+Modified Feb. 2022 - to read Raw_data/all_?_4*.dat
 
-NOTE: run shell_classify_volume_horizon.py first which separates the raw file
+NOTE: 
+    Run shell_classify_volume_horizon.py first which separates the raw file
+    The horizons are gridded and saved in /Gridded_horizons*
 Classify portions of the Volume between horizons
 
 Save volumes:
-    1. As boolean, where True = above the horizon
-    2. As a distance volume, where each point contains a distance from that horizon
+    1. As boolean, where True = above the horizon into /Chev_above_horizon
+    2. As a distance volume where each point contains a distance from that horizon
+        This is ccurrectly not used but saved to Chev_dist_from_horizon 
 
 Horizons were gridded/interpolated in shell_classify_volume_horizon.py
     + They were saved in /Gridded_horizons
@@ -17,44 +21,46 @@ Horizons were gridded/interpolated in shell_classify_volume_horizon.py
     
 @author: talongi
 """
-import glob, h5py
+
+from datetime import datetime
+import glob
+import h5py
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from sklearn.neighbors import NearestNeighbors
 
 
 # ==== Read the Data === 
 # Import - CHEVRON Volume
-h5_file = '../TFL_chev/all_data_2021.h5'
+h5_file = '../TFL_chev/all_data_2022.h5'
 V = h5py.File(h5_file, 'r')
-Vxy, Vz_x = V['coords']['xy'][:], V['coords']['z'][:]
+Vxy, Vz_x = V['xy'][:], V['z'][:]
 Vx, Vy = Vxy[:,0], Vxy[:,1]
 survey_sample_rate = 4 # ms
 
 # Format the data
-data_arr_shape = V['tfl']['values'].shape
+data_arr_shape = V['values'].shape
 data_xy = np.vstack((Vx,Vy)).T
 del Vxy, Vx, Vy, Vz_x
 
 # Lets actually work in time -- these are different limits than Shell
-Vzt = np.arange(24, 3972, 4); len(Vzt) # Timelimits output for TFL by ODT
+Vzt = np.arange(24, 3972, 4) # Timelimits output for TFL by ODT
 
 # Horizons to work with
-hor_dir = 'Gridded_horizons/'
+hor_dir = 'Gridded_horizons_4/East/'
 hor_files = sorted(glob.glob(hor_dir + '*'))
 [print(f) for f in hor_files]
 
 #%% Loop through horizons
 algorithm = 'ball_tree'
-for file in hor_files:
+for file in hor_files[1:]: # ADJUSTED this because of a bug on first loop
     unit_name = file.split('/')[-1][:-4]
     t0 = datetime.now()
     
     # Load previously gridded horizon
     horizon_points = pd.read_csv(file, sep = '\s+').values
     
-    # Use time for Z gives best results
+    # Compute with time for Z
     z_arr = Vzt
     
     # Remove np.nan for distance calc.
@@ -98,9 +104,9 @@ for file in hor_files:
 
     
     # Save
-    np.savetxt('Chev_above_horizon/{}.dat'.format(unit_name), 
+    np.savetxt('Chev_above_horizon_e_4/{}.dat'.format(unit_name), 
                np.hstack((data_xy, dir_arr)), fmt = '%i', delimiter = ' ')
-    np.savetxt('Chev_dist_from_horizon/{}.dat'.format(unit_name),
+    np.savetxt('Chev_dist_from_horizon_e_4/{}.dat'.format(unit_name),
                np.hstack((data_xy, dist_arr)), fmt = '%i', delimiter = ' ')
     print("{} distances calculated from horizon and above/below determined took {}".format(unit_name, datetime.now() - t1))
 
