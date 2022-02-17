@@ -29,8 +29,7 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-
-# Import - CHEVRON Volume
+# Import - Volume
 h5_file = '../TFL_chev/all_data_2022.h5'
 V = h5py.File(h5_file, 'r')
 Vxy, Vz_x = V['xy'][:], V['z'][:]
@@ -52,7 +51,7 @@ hor_files = sorted(glob.glob(hor_dir + '*'))
 
 # Loop through horizons
 algorithm = 'ball_tree'
-for file in hor_files[1:]:  # ADJUSTED this because of a bug on first loop
+for file in hor_files[2:]:  # ADJUSTED this because of a bug on first loop
     unit_name = file.split('/')[-1][:-4]
     t0 = datetime.now()
 
