@@ -1,6 +1,6 @@
-"""
+#!/usr/bin/env python3
+"""Do fourier analysis on horizons.
 
-Do fourier analysis on horizons 
 Want to see dominant wavelength and see if correspond to width of damage zone
 I think there are still problems in this code
 == This is probably not the way I want to proceed ==
