@@ -5,8 +5,12 @@ import glob
 import h5py
 import TFL_definitions as tfl
 
+# East
 h5_file = 'Shell_above_horizon_e_4/all_hor.h5'
 hor_dir = 'Shell_above_horizon_e_4/'
+# West
+h5_file = 'Shell_above_horizon_w_4/all_hor.h5'
+hor_dir = 'Shell_above_horizon_w_4/'
 
 f = h5py.File(h5_file, mode='r+')
 
